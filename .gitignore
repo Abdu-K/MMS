@@ -1,0 +1,55 @@
+# Repository .gitignore for C/C++ (CLion/CMake) projects on Windows
+# Add or remove entries to match your workflow
+
+# Build directories
+cmake-build-debug/
+build/
+out/
+bin/
+
+# CMake files and build outputs
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build.ninja
+rules.ninja
+TargetDirectories.txt
+
+# Compiled objects and libraries
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.a
+*.lib
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup and temp files
+*~
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Testing / temporary outputs
+Testing/Temporary/
+
+# Optional: ignore generated text files from builds (uncomment if desired)
+#cmake-build-debug/sin_array.txt
+#cmake-build-debug/sin_signal.txt
