@@ -298,3 +298,261 @@ MMSignal *createSineSignal(int totalSamples, int samplesPerPeriod, double amplit
     free(arr);
     return sig;
 }
+
+// ====================================================
+// AUFGABE 2
+// ====================================================
+
+int *getHistogram(int numberOfValues, double *values, int numberOfBins)
+{
+    if (values == NULL || numberOfValues <= 0 || numberOfBins <= 0) return NULL;
+
+    double min = values[0];
+    double max = values[0];
+    for (int i = 1; i < numberOfValues; i++)
+    {
+        if (values[i] < min) min = values[i];
+        if (values[i] > max) max = values[i];
+    }
+
+    int *bins = (int *)calloc((size_t)numberOfBins, sizeof(int));
+    if (!bins) return NULL;
+
+    if (max == min)
+    {
+        bins[0] = numberOfValues;
+        return bins;
+    }
+
+    double binWidth = (max - min) / (double)numberOfBins;
+    for (int i = 0; i < numberOfValues; i++)
+    {
+        int idx = (int)((values[i] - min) / binWidth);
+        if (idx < 0) idx = 0;
+        if (idx >= numberOfBins) idx = numberOfBins - 1;
+        bins[idx]++;
+    }
+
+    return bins;
+}
+
+Histogram *createHistogram_empty()
+{
+    Histogram *hist = (Histogram *)malloc(sizeof(Histogram));
+    if (!hist) return NULL;
+
+    hist->numberOfBins = -1;
+    hist->bins = NULL;
+    hist->minimum = 0.0;
+    hist->maximum = 0.0;
+    hist->binWidth = 0.0;
+    return hist;
+}
+
+Histogram *createHistogram_bins(int numberOfBins)
+{
+    if (numberOfBins <= 0) return NULL;
+
+    Histogram *hist = (Histogram *)malloc(sizeof(Histogram));
+    if (!hist) return NULL;
+
+    hist->numberOfBins = numberOfBins;
+    hist->minimum = 0.0;
+    hist->maximum = 0.0;
+    hist->binWidth = 0.0;
+    hist->bins = (int *)calloc((size_t)numberOfBins, sizeof(int));
+    if (!hist->bins)
+    {
+        free(hist);
+        return NULL;
+    }
+    return hist;
+}
+
+Histogram *createHistogram_array(int numberOfValues, double *values, int numberOfBins)
+{
+    if (values == NULL || numberOfValues <= 0 || numberOfBins <= 0) return NULL;
+
+    double min = values[0];
+    double max = values[0];
+    for (int i = 1; i < numberOfValues; i++)
+    {
+        if (values[i] < min) min = values[i];
+        if (values[i] > max) max = values[i];
+    }
+
+    Histogram *hist = createHistogram_bins(numberOfBins);
+    if (!hist) return NULL;
+
+    hist->minimum = min;
+    hist->maximum = max;
+    hist->binWidth = (max == min) ? 0.0 : (max - min) / (double)numberOfBins;
+
+    if (max == min)
+    {
+        hist->bins[0] = numberOfValues;
+        return hist;
+    }
+
+    for (int i = 0; i < numberOfValues; i++)
+    {
+        int idx = (int)((values[i] - min) / hist->binWidth);
+        if (idx < 0) idx = 0;
+        if (idx >= numberOfBins) idx = numberOfBins - 1;
+        hist->bins[idx]++;
+    }
+
+    return hist;
+}
+
+void deleteHistogram(Histogram *In)
+{
+    if (!In) return;
+    if (In->bins) free(In->bins);
+    free(In);
+}
+
+double computeArea(MMSignal *In)
+{
+    if (In == NULL || In->samples == NULL || In->numberOfSamples <= 0) return 0.0;
+
+    double area = 0.0;
+    for (int i = 0; i < In->numberOfSamples; i++)
+        area += In->samples[i];
+
+    In->area = area;
+    return area;
+}
+
+double computeMean(MMSignal *In)
+{
+    if (In == NULL || In->samples == NULL || In->numberOfSamples <= 0) return 0.0;
+
+    double area = computeArea(In);
+    double mean = area / (double)In->numberOfSamples;
+    In->mean = mean;
+    return mean;
+}
+
+double computeStandardDeviation(MMSignal *In)
+{
+    if (In == NULL || In->samples == NULL || In->numberOfSamples <= 0) return 0.0;
+
+    double mean = computeMean(In);
+    double sumSq = 0.0;
+    for (int i = 0; i < In->numberOfSamples; i++)
+    {
+        double diff = In->samples[i] - mean;
+        sumSq += diff * diff;
+    }
+
+    return sqrt(sumSq / (double)In->numberOfSamples);
+}
+
+double computeMedian(MMSignal *In)
+{
+    if (In == NULL || In->samples == NULL || In->numberOfSamples <= 0) return 0.0;
+
+    int n = In->numberOfSamples;
+    double *sorted = (double *)malloc(sizeof(double) * n);
+    if (!sorted) return 0.0;
+
+    for (int i = 0; i < n; i++)
+        sorted[i] = In->samples[i];
+
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (sorted[j] < sorted[i])
+            {
+                double tmp = sorted[i];
+                sorted[i] = sorted[j];
+                sorted[j] = tmp;
+            }
+        }
+    }
+
+    double median = 0.0;
+    if (n % 2 == 0)
+        median = (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0;
+    else
+        median = sorted[n / 2];
+
+    free(sorted);
+    return median;
+}
+
+LocalExtrema *computeExtrema(MMSignal *In)
+{
+    if (In == NULL || In->samples == NULL || In->numberOfSamples < 3) return NULL;
+
+    int n = In->numberOfSamples;
+    int minCount = 0;
+    int maxCount = 0;
+
+    for (int i = 1; i < n - 1; i++)
+    {
+        if (In->samples[i - 1] > In->samples[i] && In->samples[i] < In->samples[i + 1])
+            minCount++;
+        if (In->samples[i - 1] < In->samples[i] && In->samples[i] > In->samples[i + 1])
+            maxCount++;
+    }
+
+    LocalExtrema *ext = (LocalExtrema *)malloc(sizeof(LocalExtrema));
+    if (!ext) return NULL;
+
+    ext->numberOfMinimumPositions = minCount;
+    ext->numberOfMaximumPositions = maxCount;
+    ext->minimumPositionArray = minCount > 0 ? (int *)malloc(sizeof(int) * minCount) : NULL;
+    ext->maximumPositionArray = maxCount > 0 ? (int *)malloc(sizeof(int) * maxCount) : NULL;
+
+    if ((minCount > 0 && !ext->minimumPositionArray) || (maxCount > 0 && !ext->maximumPositionArray))
+    {
+        if (ext->minimumPositionArray) free(ext->minimumPositionArray);
+        if (ext->maximumPositionArray) free(ext->maximumPositionArray);
+        free(ext);
+        return NULL;
+    }
+
+    int minIdx = 0;
+    int maxIdx = 0;
+    for (int i = 1; i < n - 1; i++)
+    {
+        if (In->samples[i - 1] > In->samples[i] && In->samples[i] < In->samples[i + 1])
+            ext->minimumPositionArray[minIdx++] = i;
+        if (In->samples[i - 1] < In->samples[i] && In->samples[i] > In->samples[i + 1])
+            ext->maximumPositionArray[maxIdx++] = i;
+    }
+
+    if (In->localExtrema)
+    {
+        if (In->localExtrema->minimumPositionArray) free(In->localExtrema->minimumPositionArray);
+        if (In->localExtrema->maximumPositionArray) free(In->localExtrema->maximumPositionArray);
+        free(In->localExtrema);
+    }
+    In->localExtrema = ext;
+
+    return ext;
+}
+
+double computeEntropy(Histogram *histogramIn)
+{
+    if (!histogramIn || !histogramIn->bins || histogramIn->numberOfBins <= 0) return 0.0;
+
+    int total = 0;
+    for (int i = 0; i < histogramIn->numberOfBins; i++)
+        total += histogramIn->bins[i];
+
+    if (total == 0) return 0.0;
+
+    double entropy = 0.0;
+    for (int i = 0; i < histogramIn->numberOfBins; i++)
+    {
+        if (histogramIn->bins[i] == 0) continue;
+        double p = (double)histogramIn->bins[i] / (double)total;
+        entropy -= p * (log(p) / log(2.0));
+    }
+
+    return entropy;
+}
