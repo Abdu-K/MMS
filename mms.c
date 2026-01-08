@@ -22,6 +22,7 @@ static char *trim(char *s)
     return s;
 }
 
+// für aufgabe 3 aufgebaut
 static int maxInt(int a, int b)
 {
     return (a > b) ? a : b;
@@ -48,13 +49,13 @@ double *scaleValuesInArray(int numberOfValues, double *values, double minimum, d
 {
     if (values == NULL || numberOfValues <= 0) return NULL;
 
-    double *out = malloc(sizeof(double) * numberOfValues);
-    if (out == NULL) return NULL;
+    double *output = malloc(sizeof(double) * numberOfValues);
+    if (output == NULL) return NULL;
 
     for (int i = 0; i < numberOfValues; i++)
-        out[i] = minimum + values[i] * scalingFactor;
+        output[i] = minimum + values[i] * scalingFactor;
 
-    return out; // caller: free(out)
+    return output; // caller: free(out)
 }
 
 // Funktion 3: Sinusfolge erzeugen
@@ -62,12 +63,12 @@ double *createSineArray(int totalSamples, int samplesPerPeriod, double amplitude
 {
     if (totalSamples <= 0 || samplesPerPeriod <= 0) return NULL;
 
-    double *arr = (double *)malloc(sizeof(double) * totalSamples);
+    double *arr = malloc(sizeof(double) * totalSamples);
     if (arr == NULL) return NULL;
 
     for (int i = 0; i < totalSamples; i++)
     {
-        double phase = 2.0 * M_PI * (double)i / (double)samplesPerPeriod;
+        double phase = 2.0 * M_PI * i / samplesPerPeriod;
         arr[i] = amplitude * sin(phase);
     }
 
@@ -305,7 +306,7 @@ MMSignal *createSineSignal(int totalSamples, int samplesPerPeriod, double amplit
     double *arr = createSineArray(totalSamples, samplesPerPeriod, amplitude);
     if (!arr) return NULL;
 
-    MMSignal *sig = createSignal_array(totalSamples, arr);
+     MMSignal *sig = createSignal_array(totalSamples, arr);
     free(arr);
     return sig;
 }
