@@ -62,6 +62,7 @@ double *createSineArray(int totalSamples, int samplesPerPeriod, double amplitude
     }
 
     return arr; // caller: free(arr)
+    // return the array of the
 }
 
 // Funktion 4: Array als ASCII in Datei (eine Zahl pro Zeile)
