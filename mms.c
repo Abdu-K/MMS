@@ -22,6 +22,16 @@ static char *trim(char *s)
     return s;
 }
 
+static int maxInt(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
+static int minInt(int a, int b)
+{
+    return (a < b) ? a : b;
+}
+
 // ====================================================
 // AUFGABE 1
 // ====================================================
@@ -556,4 +566,92 @@ double computeEntropy(Histogram *histogramIn)
     }
 
     return entropy;
+}
+
+// ====================================================
+// AUFGABE 3
+// ====================================================
+
+MMSignal *convoluteSignals(MMSignal *In1, MMSignal *In2)
+{
+    if (!In1 || !In2) return NULL;
+    if (!In1->samples || !In2->samples) return NULL;
+    if (In1->numberOfSamples <= 0 || In2->numberOfSamples <= 0) return NULL;
+
+    int n1 = In1->numberOfSamples;
+    int n2 = In2->numberOfSamples;
+    int nOut = n1 + n2 - 1;
+
+    MMSignal *out = (MMSignal *)malloc(sizeof(MMSignal));
+    if (!out) return NULL;
+
+    out->samples = (double *)calloc((size_t)nOut, sizeof(double));
+    if (!out->samples)
+    {
+        free(out);
+        return NULL;
+    }
+
+    out->numberOfSamples = nOut;
+    out->area = 0.0;
+    out->mean = 0.0;
+    out->localExtrema = NULL;
+
+    for (int n = 0; n < nOut; n++)
+    {
+        int kMin = maxInt(0, n - (n2 - 1));
+        int kMax = minInt(n, n1 - 1);
+        double sum = 0.0;
+
+        for (int k = kMin; k <= kMax; k++)
+            sum += In1->samples[k] * In2->samples[n - k];
+
+        out->samples[n] = sum;
+    }
+
+    return out;
+}
+
+MMSignal *approximateGaussianBellCurve(int pascalLineNumber)
+{
+    if (pascalLineNumber < 0) return NULL;
+
+    int n = pascalLineNumber;
+    int len = n + 1;
+
+    MMSignal *sig = (MMSignal *)malloc(sizeof(MMSignal));
+    if (!sig) return NULL;
+
+    sig->samples = (double *)malloc(sizeof(double) * (size_t)len);
+    if (!sig->samples)
+    {
+        free(sig);
+        return NULL;
+    }
+
+    sig->numberOfSamples = len;
+    sig->area = 0.0;
+    sig->mean = 0.0;
+    sig->localExtrema = NULL;
+
+    long double c = 1.0L;
+    long double sum = 0.0L;
+
+    sig->samples[0] = 1.0;
+    sum += c;
+
+    for (int k = 1; k <= n; k++)
+    {
+        c = c * (long double)(n - (k - 1)) / (long double)k;
+        sig->samples[k] = (double)c;
+        sum += c;
+    }
+
+    if (sum > 0.0L)
+    {
+        for (int k = 0; k < len; k++)
+            sig->samples[k] = (double)((long double)sig->samples[k] / sum);
+    }
+
+    return sig;
 }
