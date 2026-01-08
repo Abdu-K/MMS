@@ -655,3 +655,80 @@ MMSignal *approximateGaussianBellCurve(int pascalLineNumber)
 
     return sig;
 }
+
+// ====================================================
+// AUFGABE 4
+// ====================================================
+
+void dft(int numberOfValues,
+         double *realIn, double *imaginaryIn,
+         double *realOut, double *imaginaryOut,
+         int Direction)
+{
+    if (numberOfValues <= 0) return;
+    if (!realIn || !realOut || !imaginaryOut) return;
+
+    int dir = (Direction == -1) ? -1 : 1;
+
+    for (int l = 0; l < numberOfValues; l++)
+    {
+        double sumRe = 0.0;
+        double sumIm = 0.0;
+
+        for (int k = 0; k < numberOfValues; k++)
+        {
+            double a = realIn[k];
+            double b = (imaginaryIn != NULL) ? imaginaryIn[k] : 0.0;
+
+            double angle = (2.0 * M_PI * (double)l * (double)k) / (double)numberOfValues;
+            angle *= (double)dir;
+
+            double c = cos(angle);
+            double s = sin(angle);
+
+            sumRe += a * c - b * s;
+            sumIm += a * s + b * c;
+        }
+
+        if (dir == -1)
+        {
+            sumRe /= (double)numberOfValues;
+            sumIm /= (double)numberOfValues;
+        }
+
+        realOut[l] = sumRe;
+        imaginaryOut[l] = sumIm;
+    }
+}
+
+void getCartesianToPolar(int numberOfValues,
+                         double *realIn, double *imaginaryIn,
+                         double *amplitudesOut, double *angelsOut)
+{
+    if (numberOfValues <= 0) return;
+    if (!realIn || !imaginaryIn || !amplitudesOut || !angelsOut) return;
+
+    for (int i = 0; i < numberOfValues; i++)
+    {
+        double re = realIn[i];
+        double im = imaginaryIn[i];
+        amplitudesOut[i] = sqrt(re * re + im * im);
+        angelsOut[i] = atan2(im, re);
+    }
+}
+
+void getPolarToCartesian(int numberOfValues,
+                         double *amplitudesIn, double *angelsIn,
+                         double *realOut, double *imaginaryOut)
+{
+    if (numberOfValues <= 0) return;
+    if (!amplitudesIn || !angelsIn || !realOut || !imaginaryOut) return;
+
+    for (int i = 0; i < numberOfValues; i++)
+    {
+        double amplitude = amplitudesIn[i];
+        double angle = angelsIn[i];
+        realOut[i] = amplitude * cos(angle);
+        imaginaryOut[i] = amplitude * sin(angle);
+    }
+}
