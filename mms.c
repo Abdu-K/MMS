@@ -38,7 +38,7 @@ double *scaleValuesInArray(int numberOfValues, double *values, double minimum, d
 {
     if (values == NULL || numberOfValues <= 0) return NULL;
 
-    double *out = (double *)malloc(sizeof(double) * numberOfValues);
+    double *out = malloc(sizeof(double) * numberOfValues);
     if (out == NULL) return NULL;
 
     for (int i = 0; i < numberOfValues; i++)
