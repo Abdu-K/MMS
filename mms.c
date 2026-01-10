@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <errno.h>
 
 // ---------------------------
 // Helper: whitespace trim
@@ -115,11 +114,10 @@ int readArrayFile(char *fileName, double *values)
         char *t = trim(line);
         if (*t == '\0') continue; // leere Zeile ignorieren
 
-        errno = 0;
         char *endptr = NULL;
         double v = strtod(t, &endptr);
 
-        if (endptr == t || errno != 0)
+        if (endptr == t)
             continue; // ungültige Zeile ignorieren
 
         values[count++] = v;
@@ -207,10 +205,9 @@ MMSignal *createSignal_file(char *fileName)
         char *t = trim(line);
         if (*t == '\0') continue;
 
-        errno = 0;
         char *endptr = NULL;
         double v = strtod(t, &endptr);
-        if (endptr == t || errno != 0) continue;
+        if (endptr == t) continue;
 
         if (n >= cap)
         {
@@ -240,10 +237,9 @@ MMSignal *createSignal_file(char *fileName)
     else
     {
         // Format A: erste Zeile ist Sample + tmp sind weitere Samples
-        errno = 0;
         char *endD = NULL;
         double firstSample = strtod(firstTrim, &endD);
-        if (endD == firstTrim || errno != 0)
+        if (endD == firstTrim)
         {
             free(tmp);
             return NULL;
