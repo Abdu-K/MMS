@@ -234,34 +234,34 @@ MMSignal *createSignal_file(char *fileName)
         free(tmp);
         return sig;
     }
-    else
+
+    // Format A: erste Zeile ist Sample + tmp sind weitere Samples
+    char *endD = NULL;
+    double firstSample = strtod(firstTrim, &endD);
+    if (endD == firstTrim)
     {
-        // Format A: erste Zeile ist Sample + tmp sind weitere Samples
-        char *endD = NULL;
-        double firstSample = strtod(firstTrim, &endD);
-        if (endD == firstTrim)
-        {
-            free(tmp);
-            return NULL;
-        }
-
-        double *all = (double *)malloc(sizeof(double) * (n + 1));
-        if (!all)
-        {
-            free(tmp);
-            return NULL;
-        }
-
-        all[0] = firstSample;
-        for (int i = 0; i < n; i++)
-            all[i + 1] = tmp[i];
-
-        MMSignal *sig = createSignal_array(n + 1, all);
-
-        free(all);
         free(tmp);
-        return sig;
+        return NULL;
     }
+
+    if (n + 1 > cap)
+    {
+        double *grown = (double *)realloc(tmp, sizeof(double) * (n + 1));
+        if (!grown)
+        {
+            free(tmp);
+            return NULL;
+        }
+        tmp = grown;
+    }
+
+    memmove(tmp + 1, tmp, sizeof(double) * (size_t)n);
+    tmp[0] = firstSample;
+    n += 1;
+
+    MMSignal *sig = createSignal_array(n, tmp);
+    free(tmp);
+    return sig;
 }
 
 // Signal in Datei schreiben (mit Header: numberOfSamples in erster Zeile)
